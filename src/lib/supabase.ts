@@ -291,25 +291,94 @@ class DatabaseManager {
         department: 'Marketing',
         region: 'North America',
         created_at: new Date().toISOString()
+      },
+      {
+        id: '4',
+        name: 'Emily Chen',
+        email: 'emily.chen@company.com',
+        department: 'Sales',
+        region: 'Asia Pacific',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '5',
+        name: 'David Wilson',
+        email: 'david.wilson@company.com',
+        department: 'Operations',
+        region: 'Europe',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '6',
+        name: 'Lisa Brown',
+        email: 'lisa.brown@company.com',
+        department: 'Sales',
+        region: 'Latin America',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '7',
+        name: 'Robert Taylor',
+        email: 'robert.taylor@company.com',
+        department: 'Marketing',
+        region: 'North America',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '8',
+        name: 'Jennifer Lee',
+        email: 'jennifer.lee@company.com',
+        department: 'Sales',
+        region: 'Asia Pacific',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '9',
+        name: 'Michael Garcia',
+        email: 'michael.garcia@company.com',
+        department: 'Operations',
+        region: 'Latin America',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '10',
+        name: 'Amanda White',
+        email: 'amanda.white@company.com',
+        department: 'Sales',
+        region: 'Europe',
+        created_at: new Date().toISOString()
       }
     ];
   }
 
   private getMockSalesData(userId: string): SalesRecord[] {
     const mockData: SalesRecord[] = [];
-    const customers = ['Acme Corp', 'TechStart Inc', 'Global Solutions'];
-    const products = ['Pro Software License', 'Enterprise Suite', 'Mobile App'];
-    const categories = ['Software', 'Services', 'Hardware'];
-    const regions = ['North America', 'Europe', 'Asia Pacific'];
+    const customers = [
+      'Acme Corp', 'TechStart Inc', 'Global Solutions', 'Innovation Labs', 
+      'Future Systems', 'Digital Dynamics', 'Smart Solutions', 'NextGen Tech',
+      'CloudFirst Inc', 'DataFlow Systems', 'SecureNet Ltd', 'WebScale Co'
+    ];
+    const products = [
+      'Pro Software License', 'Enterprise Suite', 'Mobile App', 'Cloud Storage',
+      'Analytics Platform', 'Security Package', 'API Access', 'Premium Support',
+      'Data Backup Service', 'Monitoring Tools', 'Integration Platform', 'AI Assistant'
+    ];
+    const categories = ['Software', 'Services', 'Hardware', 'Consulting'];
+    const regions = ['North America', 'Europe', 'Asia Pacific', 'Latin America'];
+    const statuses: ('completed' | 'pending' | 'cancelled')[] = ['completed', 'pending', 'cancelled'];
     
-    for (let i = 0; i < 10; i++) {
-      const quantity = Math.floor(Math.random() * 5) + 1;
-      const unitPrice = Math.floor(Math.random() * 300) + 100;
+    // Generate 25-35 records per user for more realistic data
+    const recordCount = Math.floor(Math.random() * 11) + 25; // 25-35 records
+    
+    for (let i = 0; i < recordCount; i++) {
+      const quantity = Math.floor(Math.random() * 8) + 1;
+      const unitPrice = Math.floor(Math.random() * 800) + 50;
+      const daysAgo = Math.floor(Math.random() * 120); // Last 4 months
       
       mockData.push({
         id: `mock-${userId}-${i}`,
         user_id: userId,
-        date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        date: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         customer: customers[Math.floor(Math.random() * customers.length)],
         product: products[Math.floor(Math.random() * products.length)],
         category: categories[Math.floor(Math.random() * categories.length)],
@@ -317,13 +386,14 @@ class DatabaseManager {
         unit_price: unitPrice,
         total_amount: quantity * unitPrice,
         region: regions[Math.floor(Math.random() * regions.length)],
-        status: Math.random() > 0.2 ? 'completed' : 'pending',
+        status: statuses[Math.floor(Math.random() * statuses.length)],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
     }
     
-    return mockData;
+    // Sort by date (newest first)
+    return mockData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 }
 
