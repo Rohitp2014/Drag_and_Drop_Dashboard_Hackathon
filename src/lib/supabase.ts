@@ -247,6 +247,10 @@ class DatabaseManager {
 
   // Get recent orders for a user
   async getRecentOrders(userId: string, limit: number = 10): Promise<SalesRecord[]> {
+    if (!supabase) {
+      return this.getMockSalesData(userId).slice(0, limit);
+    }
+
     const { data, error } = await supabase
       .from('sales_records')
       .select('*')
@@ -254,7 +258,10 @@ class DatabaseManager {
       .order('date', { ascending: false })
       .limit(limit);
     
-    if (error) throw error;
+    if (error) {
+      console.warn('Database error, falling back to mock data:', error);
+      return this.getMockSalesData(userId).slice(0, limit);
+    }
     return data || [];
   }
 
