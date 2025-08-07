@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { salesDataManager } from './data/salesData';
+import { User, databaseManager } from './lib/supabase';
 import { Dashboard } from './components/Dashboard';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { ConfigPanel } from './components/ConfigPanel';
 import { DatasetViewer } from './components/DatasetViewer';
+import { UserSelector } from './components/UserSelector';
+import { DataManager } from './components/DataManager';
 import { Widget, DashboardLayout } from './types';
 import { generateId } from './utils/helpers';
 import { validateDashboardData, debounce } from './utils/helpers';
@@ -16,11 +18,13 @@ function App() {
   const [selectedWidget, setSelectedWidget] = useState<Widget | null>(null);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isDatasetViewerOpen, setIsDatasetViewerOpen] = useState(false);
+  const [isDataManagerOpen, setIsDataManagerOpen] = useState(false);
   const [dashboardTitle, setDashboardTitle] = useState('Sales Dashboard');
-  const [salesData, setSalesData] = useState(salesDataManager.getData());
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Load saved dashboard from localStorage
   // Load saved dashboard from localStorage
   useEffect(() => {
     setIsLoading(true);
@@ -30,14 +34,13 @@ function App() {
         const data: DashboardLayout = JSON.parse(saved);
         if (validateDashboardData(data)) {
           setWidgets(data.widgets || []);
-          setDashboardTitle(data.title || 'Sales Dashboard');
+          setDashboardTitle(data.title || 'User Dashboard');
         } else {
           throw new Error('Invalid dashboard data format');
         }
       } catch (error) {
         console.error('Error loading dashboard:', error);
         setError('Failed to load saved dashboard. Loading default layout.');
-        loadSalesDashboard();
       }
     } else {
       // Load demo data
@@ -46,19 +49,12 @@ function App() {
     setIsLoading(false);
   }, []);
 
-  // Subscribe to sales data updates
+  // Load user-specific dashboard when user changes
   useEffect(() => {
-    const unsubscribe = salesDataManager.subscribe(() => {
-      setSalesData(salesDataManager.getData());
-      // Update widgets with new data
-      updateWidgetsWithSalesData();
-    });
-
-    // Start real-time updates
-    salesDataManager.startRealTimeUpdates();
-
-    return unsubscribe;
-  }, []);
+    if (selectedUser) {
+      loadUserDashboard();
+    }
+  }, [selectedUser]);
 
   // Save dashboard to localStorage whenever widgets change
   const debouncedSave = debounce((widgets: Widget[], title: string) => {
@@ -77,17 +73,19 @@ function App() {
   }, 1000);
 
   useEffect(() => {
-    if (widgets.length > 0 || dashboardTitle !== 'Sales Dashboard') {
+    if (widgets.length > 0 || dashboardTitle !== 'User Dashboard') {
       debouncedSave(widgets, dashboardTitle);
     }
   }, [widgets, dashboardTitle]);
 
-  const updateWidgetsWithSalesData = () => {
-    const metrics = salesDataManager.getMetrics();
-    const revenueByMonth = salesDataManager.getRevenueByMonth();
-    const revenueByRegion = salesDataManager.getRevenueByRegion();
-    const topProducts = salesDataManager.getTopProducts();
-    const recentOrders = salesDataManager.getRecentOrders();
+  const updateWidgetsWithSalesData = async () => {
+    if (!selectedUser) return;
+
+    const metrics = await databaseManager.getMetrics(selectedUser.id);
+    const revenueByMonth = await databaseManager.getRevenueByMonth(selectedUser.id);
+    const revenueByRegion = await databaseManager.getRevenueByRegion(selectedUser.id);
+    const topProducts = await databaseManager.getTopProducts(selectedUser.id);
+    const recentOrders = await databaseManager.getRecentOrders(selectedUser.id);
 
     setWidgets(prevWidgets => prevWidgets.map(widget => {
       switch (widget.id) {
@@ -178,16 +176,19 @@ function App() {
     }));
   };
 
-  const loadSalesDashboard = () => {
-    const metrics = salesDataManager.getMetrics();
-    const revenueByMonth = salesDataManager.getRevenueByMonth();
-    const revenueByRegion = salesDataManager.getRevenueByRegion();
-    const topProducts = salesDataManager.getTopProducts();
-    const recentOrders = salesDataManager.getRecentOrders();
+  const loadUserDashboard = async () => {
+    if (!selectedUser) return;
 
-    const salesWidgets: Widget[] = [
+    try {
+      const metrics = await databaseManager.getMetrics(selectedUser.id);
+      const revenueByMonth = await databaseManager.getRevenueByMonth(selectedUser.id);
+      const revenueByRegion = await databaseManager.getRevenueByRegion(selectedUser.id);
+      const topProducts = await databaseManager.getTopProducts(selectedUser.id);
+      const recentOrders = await databaseManager.getRecentOrders(selectedUser.id);
+
+      const salesWidgets: Widget[] = [
       {
-        id: 'sales-revenue',
+        id: `sales-revenue-${selectedUser.id}`,
         type: 'metric',
         title: 'Total Revenue',
         position: { x: 0, y: 0 },
@@ -200,7 +201,7 @@ function App() {
         config: { color: '#10B981' }
       },
       {
-        id: 'total-orders',
+        id: `total-orders-${selectedUser.id}`,
         type: 'metric',
         title: 'Total Orders',
         position: { x: 320, y: 0 },
@@ -213,7 +214,7 @@ function App() {
         config: { color: '#3B82F6' }
       },
       {
-        id: 'avg-order-value',
+        id: `avg-order-value-${selectedUser.id}`,
         type: 'metric',
         title: 'Avg Order Value',
         position: { x: 620, y: 0 },
@@ -226,7 +227,7 @@ function App() {
         config: { color: '#F59E0B' }
       },
       {
-        id: 'revenue-chart',
+        id: `revenue-chart-${selectedUser.id}`,
         type: 'chart',
         title: 'Revenue by Month',
         position: { x: 0, y: 170 },
@@ -235,7 +236,7 @@ function App() {
         config: { chartType: 'line', color: '#3B82F6' }
       },
       {
-        id: 'region-chart',
+        id: `region-chart-${selectedUser.id}`,
         type: 'chart',
         title: 'Revenue by Region',
         position: { x: 470, y: 170 },
@@ -244,7 +245,7 @@ function App() {
         config: { chartType: 'bar', color: '#10B981' }
       },
       {
-        id: 'recent-orders',
+        id: `recent-orders-${selectedUser.id}`,
         type: 'table',
         title: 'Recent Orders',
         position: { x: 0, y: 490 },
@@ -262,7 +263,7 @@ function App() {
         config: {}
       },
       {
-        id: 'top-products',
+        id: `top-products-${selectedUser.id}`,
         type: 'table',
         title: 'Top Products',
         position: { x: 620, y: 490 },
@@ -278,7 +279,7 @@ function App() {
         config: {}
       },
       {
-        id: 'completion-rate',
+        id: `completion-rate-${selectedUser.id}`,
         type: 'progress',
         title: 'Order Completion Rate',
         position: { x: 940, y: 0 },
@@ -291,7 +292,7 @@ function App() {
         config: { color: '#10B981' }
       },
       {
-        id: 'revenue-goal',
+        id: `revenue-goal-${selectedUser.id}`,
         type: 'progress',
         title: 'Revenue Goal',
         position: { x: 940, y: 220 },
@@ -304,7 +305,12 @@ function App() {
         config: { color: '#F59E0B' }
       }
     ];
-    setWidgets(salesWidgets);
+      setWidgets(salesWidgets);
+      setDashboardTitle(`${selectedUser.name}'s Dashboard`);
+    } catch (error) {
+      console.error('Error loading user dashboard:', error);
+      setError('Failed to load user dashboard data.');
+    }
   };
 
   const addWidget = (type: Widget['type']) => {
@@ -374,6 +380,10 @@ function App() {
     setError(null);
   };
 
+  const handleDataUpdate = () => {
+    updateWidgetsWithSalesData();
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -404,12 +414,21 @@ function App() {
           </div>
         )}
         
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <UserSelector
+            selectedUser={selectedUser}
+            onUserSelect={setSelectedUser}
+          />
+        </div>
+        
         <Header 
           title={dashboardTitle}
           onTitleChange={setDashboardTitle}
           onClearDashboard={clearDashboard}
-          onLoadDemo={loadSalesDashboard}
+          onLoadDemo={() => {}} // Disabled when user is selected
           onViewDataset={() => setIsDatasetViewerOpen(true)}
+          selectedUser={selectedUser}
+          onManageData={() => setIsDataManagerOpen(true)}
         />
         
         <div className="flex h-[calc(100vh-4rem)]">
@@ -434,7 +453,18 @@ function App() {
         </div>
         
         {isDatasetViewerOpen && (
-          <DatasetViewer onClose={() => setIsDatasetViewerOpen(false)} />
+          <DatasetViewer 
+            selectedUser={selectedUser}
+            onClose={() => setIsDatasetViewerOpen(false)} 
+          />
+        )}
+        
+        {isDataManagerOpen && selectedUser && (
+          <DataManager
+            user={selectedUser}
+            onClose={() => setIsDataManagerOpen(false)}
+            onDataUpdate={handleDataUpdate}
+          />
         )}
       </div>
     </DndProvider>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Download, Upload, Trash2, RefreshCw, Database } from 'lucide-react';
+import { Settings, Download, Upload, Trash2, RefreshCw, Database, Edit } from 'lucide-react';
+import { User } from '../lib/supabase';
 
 interface HeaderProps {
   title: string;
@@ -7,6 +8,8 @@ interface HeaderProps {
   onClearDashboard: () => void;
   onLoadDemo: () => void;
   onViewDataset: () => void;
+  selectedUser: User | null;
+  onManageData?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -14,7 +17,9 @@ export const Header: React.FC<HeaderProps> = ({
   onTitleChange,
   onClearDashboard,
   onLoadDemo,
-  onViewDataset
+  onViewDataset,
+  selectedUser,
+  onManageData
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempTitle, setTempTitle] = useState(title);
@@ -108,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span>Auto-save enabled</span>
         </div>
 
-        <button
+        {!selectedUser && <button
           onClick={onLoadDemo}
           className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
           title="Load Sales Dashboard"
@@ -116,7 +121,7 @@ export const Header: React.FC<HeaderProps> = ({
           <RefreshCw className="w-4 h-4" />
           <span className="text-sm">Sales Data</span>
         </button>
-
+        }
         <button
           onClick={onViewDataset}
           className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
@@ -125,6 +130,17 @@ export const Header: React.FC<HeaderProps> = ({
           <Database className="w-4 h-4" />
           <span className="text-sm">View Dataset</span>
         </button>
+
+        {selectedUser && onManageData && (
+          <button
+            onClick={onManageData}
+            className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Manage Data"
+          >
+            <Edit className="w-4 h-4" />
+            <span className="text-sm">Manage Data</span>
+          </button>
+        )}
 
         <button
           onClick={handleExport}

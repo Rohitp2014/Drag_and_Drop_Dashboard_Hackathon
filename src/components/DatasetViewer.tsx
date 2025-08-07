@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, Filter, Download, Eye, BarChart3 } from 'lucide-react';
-import { salesDataManager, SalesRecord } from '../data/salesData';
+import { SalesRecord, User, databaseManager } from '../lib/supabase';
 
 interface DatasetViewerProps {
+  selectedUser?: User | null;
   onClose: () => void;
 }
 
-export const DatasetViewer: React.FC<DatasetViewerProps> = ({ onClose }) => {
+export const DatasetViewer: React.FC<DatasetViewerProps> = ({ selectedUser, onClose }) => {
   const [data, setData] = useState<SalesRecord[]>([]);
   const [filteredData, setFilteredData] = useState<SalesRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,18 +19,26 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ onClose }) => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
-    const salesData = salesDataManager.getData();
-    setData(salesData);
-    setFilteredData(salesData);
+    loadData();
+  }, [selectedUser]);
 
-    const unsubscribe = salesDataManager.subscribe(() => {
-      const updatedData = salesDataManager.getData();
-      setData(updatedData);
-      applyFilters(updatedData);
-    });
-
-    return unsubscribe;
-  }, []);
+  const loadData = async () => {
+    try {
+      let salesData: SalesRecord[];
+      if (selectedUser) {
+        salesData = await databaseManager.getSalesData(selectedUser.id);
+      } else {
+        // Load all users' data for general view
+        const users = await databaseManager.getUsers();
+        const allData = await Promise.all(users.map(user => databaseManager.getSalesData(user.id)));
+        salesData = allData.flat();
+      }
+      setData(salesData);
+      setFilteredData(salesData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  };
 
   const applyFilters = (dataToFilter: SalesRecord[] = data) => {
     let filtered = [...dataToFilter];
@@ -39,8 +48,7 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ onClose }) => {
       filtered = filtered.filter(record =>
         record.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
         record.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.salesRep.toLowerCase().includes(searchTerm.toLowerCase())
+        record.id.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -129,7 +137,15 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ onClose }) => {
   const uniqueStatuses = [...new Set(data.map(record => record.status))];
   const uniqueRegions = [...new Set(data.map(record => record.region))];
 
-  const metrics = salesDataManager.getMetrics();
+  const calculateMetrics = () => {
+    const completedOrders = data.filter(record => record.status === 'completed');
+    const totalRevenue = completedOrders.reduce((sum, record) => sum + record.total_amount, 0);
+    const averageOrderValue = totalRevenue / (completedOrders.length || 1);
+    const completionRate = (completedOrders.length / data.length) * 100;
+    return { totalRevenue, averageOrderValue, completionRate };
+  };
+
+  const metrics = calculateMetrics();
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -138,7 +154,9 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ onClose }) => {
         <div className="p-6 border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Eye className="w-6 h-6 text-blue-600" />
-            <h2 className="text-2xl font-bold text-gray-800">Sales Dataset Viewer</h2>
+            <h2 className="text-2xl font-bold text-gray-800">
+              {selectedUser ? `${selectedUser.name}'s Sales Data` : 'All Sales Data'}
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -157,7 +175,7 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ onClose }) => {
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm">
               <div className="text-sm text-gray-500">Total Revenue</div>
-              <div className="text-2xl font-bold text-green-600">${metrics.totalRevenue.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-600">${Math.round(metrics.totalRevenue).toLocaleString()}</div>
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm">
               <div className="text-sm text-gray-500">Avg Order Value</div>
@@ -165,7 +183,7 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ onClose }) => {
             </div>
             <div className="bg-white p-4 rounded-lg shadow-sm">
               <div className="text-sm text-gray-500">Completion Rate</div>
-              <div className="text-2xl font-bold text-purple-600">{metrics.completionRate.toFixed(1)}%</div>
+              <div className="text-2xl font-bold text-purple-600">{isNaN(metrics.completionRate) ? '0' : metrics.completionRate.toFixed(1)}%</div>
             </div>
           </div>
         </div>
@@ -178,7 +196,7 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ onClose }) => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by customer, product, order ID, or sales rep..."
+                placeholder="Search by customer, product, or order ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -241,7 +259,6 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ onClose }) => {
                   { key: 'quantity', label: 'Qty' },
                   { key: 'unitPrice', label: 'Unit Price' },
                   { key: 'totalAmount', label: 'Total' },
-                  { key: 'salesRep', label: 'Sales Rep' },
                   { key: 'region', label: 'Region' },
                   { key: 'status', label: 'Status' }
                 ].map(({ key, label }) => (
@@ -275,9 +292,8 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ onClose }) => {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-center">{record.quantity}</td>
-                  <td className="px-4 py-3 font-mono">${record.unitPrice}</td>
-                  <td className="px-4 py-3 font-mono font-medium">${record.totalAmount.toLocaleString()}</td>
-                  <td className="px-4 py-3">{record.salesRep}</td>
+                  <td className="px-4 py-3 font-mono">${record.unit_price}</td>
+                  <td className="px-4 py-3 font-mono font-medium">${record.total_amount.toLocaleString()}</td>
                   <td className="px-4 py-3">{record.region}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
