@@ -51,6 +51,8 @@ export interface SalesMetrics {
 }
 
 class DatabaseManager {
+  private mockDataCache: Map<string, SalesRecord[]> = new Map();
+
   // Get all users
   async getUsers(): Promise<User[]> {
     if (!supabase) {
@@ -72,7 +74,11 @@ class DatabaseManager {
   // Get sales data for a specific user
   async getSalesData(userId: string): Promise<SalesRecord[]> {
     if (!supabase) {
-      return this.getMockSalesData(userId);
+      // Use cached data if available, otherwise generate new data
+      if (!this.mockDataCache.has(userId)) {
+        this.mockDataCache.set(userId, this.getMockSalesData(userId));
+      }
+      return this.mockDataCache.get(userId) || [];
     }
 
     const { data, error } = await supabase
@@ -83,7 +89,10 @@ class DatabaseManager {
     
     if (error) {
       console.warn('Database error, falling back to mock data:', error);
-      return this.getMockSalesData(userId);
+      if (!this.mockDataCache.has(userId)) {
+        this.mockDataCache.set(userId, this.getMockSalesData(userId));
+      }
+      return this.mockDataCache.get(userId) || [];
     }
     return data || [];
   }
@@ -91,13 +100,26 @@ class DatabaseManager {
   // Add new sales record
   async addSalesRecord(record: Omit<SalesRecord, 'id' | 'created_at' | 'updated_at'>): Promise<SalesRecord> {
     if (!supabase) {
-      // In mock mode, simulate adding a record
+      // In mock mode, add to cached data
+      const userId = record.user_id;
+      if (!this.mockDataCache.has(userId)) {
+        this.mockDataCache.set(userId, this.getMockSalesData(userId));
+      }
+      
+      const existingData = this.mockDataCache.get(userId) || [];
+      const maxId = Math.max(...existingData.map(r => parseInt(r.id.split('-')[2]) || 0), 0);
+      
       const newRecord: SalesRecord = {
-        id: `mock-${record.user_id}-${Date.now()}`,
+        id: `mock-${userId}-${maxId + 1}`,
         ...record,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+      
+      // Add to beginning of array (newest first)
+      const updatedData = [newRecord, ...existingData];
+      this.mockDataCache.set(userId, updatedData);
+      
       return newRecord;
     }
 
@@ -114,23 +136,27 @@ class DatabaseManager {
   // Update sales record
   async updateSalesRecord(id: string, updates: Partial<SalesRecord>): Promise<SalesRecord> {
     if (!supabase) {
-      // In mock mode, simulate updating a record
-      const updatedRecord: SalesRecord = {
-        id,
-        user_id: updates.user_id || '',
-        date: updates.date || new Date().toISOString().split('T')[0],
-        customer: updates.customer || '',
-        product: updates.product || '',
-        category: updates.category || '',
-        quantity: updates.quantity || 1,
-        unit_price: updates.unit_price || 0,
-        total_amount: updates.total_amount || 0,
-        region: updates.region || '',
-        status: updates.status || 'completed',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      return updatedRecord;
+      // In mock mode, update cached data
+      const userId = updates.user_id;
+      if (userId && this.mockDataCache.has(userId)) {
+        const existingData = this.mockDataCache.get(userId) || [];
+        const recordIndex = existingData.findIndex(r => r.id === id);
+        
+        if (recordIndex !== -1) {
+          const updatedRecord = {
+            ...existingData[recordIndex],
+            ...updates,
+            updated_at: new Date().toISOString()
+          };
+          
+          existingData[recordIndex] = updatedRecord;
+          this.mockDataCache.set(userId, existingData);
+          return updatedRecord;
+        }
+      }
+      
+      // Fallback if record not found
+      throw new Error('Record not found');
     }
 
     const { data, error } = await supabase
@@ -147,7 +173,15 @@ class DatabaseManager {
   // Delete sales record
   async deleteSalesRecord(id: string): Promise<void> {
     if (!supabase) {
-      // In mock mode, simulate deletion (no-op)
+      // In mock mode, remove from cached data
+      for (const [userId, data] of this.mockDataCache.entries()) {
+        const recordIndex = data.findIndex(r => r.id === id);
+        if (recordIndex !== -1) {
+          data.splice(recordIndex, 1);
+          this.mockDataCache.set(userId, data);
+          return;
+        }
+      }
       return;
     }
 
@@ -272,7 +306,10 @@ class DatabaseManager {
   // Get recent orders for a user
   async getRecentOrders(userId: string, limit: number = 10): Promise<SalesRecord[]> {
     if (!supabase) {
-      return this.getMockSalesData(userId).slice(0, limit);
+      if (!this.mockDataCache.has(userId)) {
+        this.mockDataCache.set(userId, this.getMockSalesData(userId));
+      }
+      return (this.mockDataCache.get(userId) || []).slice(0, limit);
     }
 
     const { data, error } = await supabase
@@ -284,7 +321,10 @@ class DatabaseManager {
     
     if (error) {
       console.warn('Database error, falling back to mock data:', error);
-      return this.getMockSalesData(userId).slice(0, limit);
+      if (!this.mockDataCache.has(userId)) {
+        this.mockDataCache.set(userId, this.getMockSalesData(userId));
+      }
+      return (this.mockDataCache.get(userId) || []).slice(0, limit);
     }
     return data || [];
   }
@@ -391,8 +431,8 @@ class DatabaseManager {
     const regions = ['North America', 'Europe', 'Asia Pacific', 'Latin America'];
     const statuses: ('completed' | 'pending' | 'cancelled')[] = ['completed', 'pending', 'cancelled'];
     
-    // Generate 25-35 records per user for more realistic data
-    const recordCount = Math.floor(Math.random() * 11) + 25; // 25-35 records
+    // Generate exactly 30 records per user
+    const recordCount = 30;
     
     for (let i = 0; i < recordCount; i++) {
       const quantity = Math.floor(Math.random() * 8) + 1;

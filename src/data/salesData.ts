@@ -212,32 +212,8 @@ class SalesDataManager {
 
   // Simulate real-time data updates
   startRealTimeUpdates(): void {
-    setInterval(() => {
-      // Randomly add new sales records
-      if (Math.random() < 0.3) { // 30% chance every interval
-        const customers = ['Acme Corp', 'TechStart Inc', 'Global Solutions', 'Innovation Labs'];
-        const products = ['Pro Software License', 'Enterprise Suite', 'Mobile App', 'Cloud Storage'];
-        const categories = ['Software', 'Services', 'Hardware', 'Consulting'];
-        const salesReps = ['John Smith', 'Sarah Johnson', 'Mike Davis', 'Emily Chen'];
-        const regions = ['North America', 'Europe', 'Asia Pacific', 'Latin America'];
-        
-        const quantity = Math.floor(Math.random() * 5) + 1;
-        const unitPrice = Math.floor(Math.random() * 300) + 100;
-        
-        this.addSalesRecord({
-          date: new Date().toISOString().split('T')[0],
-          customer: customers[Math.floor(Math.random() * customers.length)],
-          product: products[Math.floor(Math.random() * products.length)],
-          category: categories[Math.floor(Math.random() * categories.length)],
-          quantity,
-          unitPrice,
-          totalAmount: quantity * unitPrice,
-          salesRep: salesReps[Math.floor(Math.random() * salesReps.length)],
-          region: regions[Math.floor(Math.random() * regions.length)],
-          status: Math.random() > 0.1 ? 'completed' : 'pending'
-        });
-      }
-    }, 10000); // Every 10 seconds
+    // Auto-updates disabled - data is now static with manual CRUD operations only
+    console.log('Auto-updates disabled. Data updates only through manual CRUD operations.');
   }
 }
 
