@@ -77,10 +77,12 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+    <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 px-6 py-5 flex items-center justify-between shadow-sm">
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
-          <Settings className="w-6 h-6 text-blue-600" />
+          <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+            <Settings className="w-6 h-6 text-white" />
+          </div>
           {isEditing ? (
             <input
               type="text"
@@ -88,12 +90,12 @@ export const Header: React.FC<HeaderProps> = ({
               onChange={(e) => setTempTitle(e.target.value)}
               onBlur={handleTitleSubmit}
               onKeyPress={(e) => e.key === 'Enter' && handleTitleSubmit()}
-              className="text-xl font-semibold bg-transparent border-b border-blue-500 outline-none"
+              className="text-xl font-bold bg-transparent border-b-2 border-blue-500 outline-none text-gray-800"
               autoFocus
             />
           ) : (
             <h1
-              className="text-xl font-semibold text-gray-800 cursor-pointer hover:text-blue-600 transition-colors"
+              className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent cursor-pointer hover:from-blue-600 hover:to-purple-600 transition-all duration-300"
               onClick={() => setIsEditing(true)}
             >
               {title}
@@ -101,21 +103,21 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
         {lastSaved && (
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
             Last saved: {lastSaved}
           </div>
         )}
       </div>
 
       <div className="flex items-center space-x-2">
-        <div className="flex items-center space-x-1 px-2 py-1 bg-green-50 text-green-700 rounded-lg text-sm">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+        <div className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 rounded-xl text-sm font-medium shadow-sm border border-green-100">
+          <div className="w-2 h-2 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse"></div>
           <span>Auto-save enabled</span>
         </div>
 
         {!selectedUser && <button
           onClick={onLoadDemo}
-          className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 rounded-xl transition-all duration-200 font-medium"
           title="Load Sales Dashboard"
         >
           <RefreshCw className="w-4 h-4" />
@@ -124,7 +126,7 @@ export const Header: React.FC<HeaderProps> = ({
         }
         <button
           onClick={onViewDataset}
-          className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl transition-all duration-200 font-medium"
           title="View Dataset"
         >
           <Database className="w-4 h-4" />
@@ -134,7 +136,7 @@ export const Header: React.FC<HeaderProps> = ({
         {selectedUser && onManageData && (
           <button
             onClick={onManageData}
-            className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 rounded-xl transition-all duration-200 font-medium"
             title="Manage Data"
           >
             <Edit className="w-4 h-4" />
@@ -144,14 +146,14 @@ export const Header: React.FC<HeaderProps> = ({
 
         <button
           onClick={handleExport}
-          className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 rounded-xl transition-all duration-200 font-medium"
           title="Export Dashboard"
         >
           <Download className="w-4 h-4" />
           <span className="text-sm">Export</span>
         </button>
 
-        <label className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+        <label className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-xl transition-all duration-200 cursor-pointer font-medium">
           <Upload className="w-4 h-4" />
           <span className="text-sm">Import</span>
           <input
@@ -164,7 +166,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         <button
           onClick={onClearDashboard}
-          className="flex items-center space-x-2 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+          className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 rounded-xl transition-all duration-200 font-medium"
           title="Clear Dashboard"
         >
           <Trash2 className="w-4 h-4" />

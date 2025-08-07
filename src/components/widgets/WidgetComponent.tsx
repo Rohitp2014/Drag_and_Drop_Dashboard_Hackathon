@@ -96,13 +96,13 @@ export const WidgetComponent: React.FC<WidgetComponentProps> = ({
   return (
     <div
       ref={widgetRef}
-      className={`absolute bg-white rounded-lg shadow-sm border-2 transition-all duration-200 ${
+      className={`absolute bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border-2 transition-all duration-300 ${
         isDragging 
-          ? 'opacity-75 scale-105 border-blue-400 shadow-xl backdrop-blur-sm' 
+          ? 'opacity-80 scale-105 border-blue-400 shadow-2xl rotate-1' 
           : isHovered || isSelected
-            ? 'border-blue-300 shadow-lg backdrop-blur-sm'
-            : 'border-white/50 hover:border-white/80 hover:shadow-lg backdrop-blur-sm'
-      } bg-white/95`}
+            ? 'border-blue-300 shadow-xl transform hover:scale-[1.02]'
+            : 'border-white/30 hover:border-blue-200 hover:shadow-xl hover:transform hover:scale-[1.01]'
+      }`}
       style={{
         left: widget.position.x,
         top: widget.position.y,
@@ -115,18 +115,20 @@ export const WidgetComponent: React.FC<WidgetComponentProps> = ({
       onClick={handleClick}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-100/50 bg-white/50 rounded-t-lg">
+      <div className="flex items-center justify-between p-4 border-b border-gray-100/50 bg-gradient-to-r from-white/60 to-white/40 rounded-t-2xl backdrop-blur-sm">
         <div className="flex items-center space-x-2 flex-1 min-w-0">
-          <Move className="w-4 h-4 text-gray-400" />
-          <h3 className="font-medium text-gray-800 truncate">{widget.title}</h3>
+          <div className="p-1 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg">
+            <Move className="w-4 h-4 text-blue-600" />
+          </div>
+          <h3 className="font-semibold text-gray-800 truncate text-sm">{widget.title}</h3>
         </div>
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-2">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onSelect(widget);
             }}
-            className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
             title="Configure"
           >
             <Settings className="w-4 h-4" />
@@ -136,7 +138,7 @@ export const WidgetComponent: React.FC<WidgetComponentProps> = ({
               e.stopPropagation();
               onDelete(widget.id);
             }}
-            className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
             title="Delete"
           >
             <X className="w-4 h-4" />
@@ -146,7 +148,7 @@ export const WidgetComponent: React.FC<WidgetComponentProps> = ({
 
       {/* Content */}
       <div 
-        className="p-4 h-[calc(100%-60px)] overflow-hidden"
+        className="p-5 h-[calc(100%-68px)] overflow-hidden"
         style={{ pointerEvents: isDragging ? 'none' : 'auto' }}
       >
         {renderWidget()}
@@ -154,11 +156,11 @@ export const WidgetComponent: React.FC<WidgetComponentProps> = ({
 
       {/* Resize Handle */}
       <div
-        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize opacity-0 hover:opacity-100 transition-opacity bg-blue-500/20 rounded-tl-lg"
+        className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize opacity-0 hover:opacity-100 transition-all duration-200 bg-gradient-to-br from-blue-400/30 to-purple-400/30 rounded-tl-xl"
         onMouseDown={startResize}
       >
-        <div className="absolute bottom-1 right-1 w-0 h-0 border-l-4 border-l-transparent border-b-4 border-b-blue-500"></div>
-        <div className="absolute bottom-0.5 right-0.5 w-0 h-0 border-l-3 border-l-transparent border-b-3 border-b-blue-400"></div>
+        <div className="absolute bottom-1 right-1 w-0 h-0 border-l-4 border-l-transparent border-b-4 border-b-blue-500/70"></div>
+        <div className="absolute bottom-0.5 right-0.5 w-0 h-0 border-l-3 border-l-transparent border-b-3 border-b-purple-400/70"></div>
       </div>
     </div>
   );

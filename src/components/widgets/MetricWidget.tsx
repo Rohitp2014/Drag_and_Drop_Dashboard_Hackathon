@@ -34,11 +34,11 @@ export const MetricWidget: React.FC<MetricWidgetProps> = ({ widget }) => {
   };
 
   return (
-    <div className="h-full flex flex-col justify-between">
+    <div className="h-full flex flex-col justify-between p-1">
       <div>
-        <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
+        <div className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3">{value}</div>
         {change && (
-          <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-sm font-medium ${getTrendColor()}`}>
+          <div className={`inline-flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-semibold shadow-sm ${getTrendColor()}`}>
             {getTrendIcon()}
             <span>{change}</span>
           </div>
@@ -46,12 +46,12 @@ export const MetricWidget: React.FC<MetricWidgetProps> = ({ widget }) => {
       </div>
       
       <div 
-        className="h-1 bg-gray-200 rounded-full overflow-hidden"
+        className="h-2 bg-gray-200 rounded-full overflow-hidden shadow-inner mt-4"
       >
         <div 
-          className="h-full rounded-full transition-all duration-500"
+          className="h-full rounded-full transition-all duration-700 shadow-sm"
           style={{ 
-            backgroundColor: color,
+            background: `linear-gradient(90deg, ${color}, ${color}dd)`,
             width: trend === 'up' ? '75%' : trend === 'down' ? '25%' : '50%'
           }}
         />

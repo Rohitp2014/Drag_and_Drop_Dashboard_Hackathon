@@ -49,8 +49,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onAddWidget }) => {
   });
 
   return (
-    <aside className="w-80 bg-white border-r border-gray-200 p-6 overflow-y-auto">
-      <h2 className="text-lg font-semibold text-gray-800 mb-6">Widget Library</h2>
+    <aside className="w-80 bg-white/95 backdrop-blur-sm border-r border-gray-200/50 p-6 overflow-y-auto shadow-sm">
+      <div className="mb-6">
+        <h2 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-2">Widget Library</h2>
+        <p className="text-sm text-gray-500">Drag and drop widgets to build your dashboard</p>
+      </div>
       
       {/* Search and Filter */}
       <div className="space-y-4 mb-6">
@@ -60,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onAddWidget }) => {
             placeholder="Search widgets..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50/50 transition-all duration-200"
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,10 +77,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onAddWidget }) => {
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
+              className={`px-3 py-2 text-xs font-medium rounded-full transition-all duration-200 ${
                 selectedCategory === category.id
-                  ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-105'
               }`}
             >
               {category.label}
@@ -91,18 +94,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onAddWidget }) => {
           <button
             key={type}
             onClick={() => onAddWidget(type)}
-            className="w-full p-4 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-lg text-left transition-all duration-200 group"
+            className="w-full p-4 bg-gradient-to-br from-gray-50 to-white hover:from-blue-50 hover:to-indigo-50 border border-gray-200 hover:border-blue-300 rounded-xl text-left transition-all duration-300 group hover:shadow-lg hover:scale-[1.02]"
           >
             <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0 w-10 h-10 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors">
-                <Icon className="w-5 h-5 text-blue-600" />
+              <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 group-hover:from-blue-200 group-hover:to-purple-200 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm">
+                <Icon className="w-6 h-6 text-blue-600 group-hover:scale-110 transition-transform duration-300" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900 group-hover:text-blue-900">{label}</h3>
-                  <Plus className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-900 transition-colors">{label}</h3>
+                  <Plus className="w-4 h-4 text-gray-400 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-300" />
                 </div>
-                <p className="text-sm text-gray-500 mt-1">{description}</p>
+                <p className="text-sm text-gray-500 mt-1 leading-relaxed">{description}</p>
               </div>
             </div>
           </button>
@@ -111,25 +114,37 @@ export const Sidebar: React.FC<SidebarProps> = ({ onAddWidget }) => {
 
       {filteredWidgets.length === 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No widgets found matching your criteria.</p>
+          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-1.009-5.824-2.562M15 6.306a7.962 7.962 0 00-6 0m6 0V3a1 1 0 00-1-1H10a1 1 0 00-1 1v3.306" />
+            </svg>
+          </div>
+          <p className="text-gray-500 font-medium">No widgets found</p>
+          <p className="text-gray-400 text-sm mt-1">Try adjusting your search criteria</p>
         </div>
       )}
 
-      <div className="mt-8 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-        <h3 className="font-medium text-blue-900 mb-2">Sales Dashboard</h3>
-        <ul className="text-sm text-blue-700 space-y-1">
+      <div className="mt-8 p-5 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl border border-blue-200/50 shadow-sm">
+        <h3 className="font-bold text-blue-900 mb-3 flex items-center">
+          <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+          Dashboard Tips
+        </h3>
+        <ul className="text-sm text-blue-700 space-y-2">
           <li>• Drag widgets to reposition them</li>
           <li>• Resize using the corner handles</li>
           <li>• Click widgets to configure them</li>
-          <li>• Data updates automatically every 10s</li>
+          <li>• Manage data through user dashboard</li>
           <li>• Export/import dashboard layouts</li>
         </ul>
       </div>
 
       {/* Performance Info */}
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-        <h4 className="text-sm font-medium text-gray-700 mb-1">Performance</h4>
-        <p className="text-xs text-gray-600">
+      <div className="mt-4 p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-100">
+        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+          Performance
+        </h4>
+        <p className="text-xs text-gray-600 leading-relaxed">
           Dashboard optimized for {filteredWidgets.length} widget types
         </p>
       </div>
