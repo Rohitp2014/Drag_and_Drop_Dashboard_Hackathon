@@ -14,6 +14,7 @@ interface WidgetComponentProps {
   onResize: (id: string, size: { width: number; height: number }) => void;
   onDelete: (id: string) => void;
   onSelect: (widget: Widget) => void;
+  onUpdateWidget: (id: string, updates: Partial<Widget>) => void;
 }
 
 export const WidgetComponent: React.FC<WidgetComponentProps> = ({
@@ -21,7 +22,8 @@ export const WidgetComponent: React.FC<WidgetComponentProps> = ({
   onMove,
   onResize,
   onDelete,
-  onSelect
+  onSelect,
+  onUpdateWidget
 }) => {
   const widgetRef = useRef<HTMLDivElement>(null);
   const [isResizing, setIsResizing] = useState(false);
@@ -151,7 +153,11 @@ export const WidgetComponent: React.FC<WidgetComponentProps> = ({
         className="p-5 h-[calc(100%-68px)] overflow-hidden"
         style={{ pointerEvents: isDragging ? 'none' : 'auto' }}
       >
-        {renderWidget()}
+        {widget.type === 'table' ? (
+          <TableWidget widget={widget} onUpdateWidget={onUpdateWidget} />
+        ) : (
+          renderWidget()
+        )}
       </div>
 
       {/* Resize Handle */}

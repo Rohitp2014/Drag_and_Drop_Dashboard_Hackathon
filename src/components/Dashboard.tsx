@@ -124,6 +124,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             onResize={handleWidgetResize}
             onDelete={onDeleteWidget}
             onSelect={onSelectWidget}
+            onUpdateWidget={onUpdateWidget}
           />
         ))
       )}

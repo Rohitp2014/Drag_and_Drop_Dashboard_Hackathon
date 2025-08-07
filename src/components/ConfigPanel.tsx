@@ -143,6 +143,32 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
             </div>
           </div>
         );
+      case 'table':
+        return (
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h5 className="font-medium text-blue-900 mb-2">Table Controls</h5>
+              <p className="text-sm text-blue-700 mb-3">
+                Use the controls within the table widget to add/remove rows and columns.
+              </p>
+              <div className="space-y-2 text-sm text-blue-600">
+                <div>• Click "Row" button to add new rows</div>
+                <div>• Click "Column" button to add new columns</div>
+                <div>• Use minus (-) buttons to remove rows/columns</div>
+                <div>• Click on any cell to edit content</div>
+                <div>• Click on headers to rename columns</div>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Table Dimensions
+              </label>
+              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                Current: {widget.data.rows?.length || 0} rows × {widget.data.headers?.length || 0} columns
+              </div>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
