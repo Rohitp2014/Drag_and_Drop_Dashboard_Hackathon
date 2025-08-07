@@ -202,6 +202,15 @@ function App() {
               label: 'Monthly Revenue Goal (K)'
             }
           };
+        case `total-revenue-sum-${selectedUser.id}`:
+          return {
+            ...widget,
+            data: {
+              value: `$${metrics.totalRevenue.toLocaleString()}`,
+              change: `${recentOrders.length} recent orders`,
+              trend: metrics.totalRevenue > 50000 ? 'up' : metrics.totalRevenue > 25000 ? 'neutral' : 'down'
+            }
+          };
         default:
           return widget;
       }
@@ -231,6 +240,19 @@ function App() {
           trend: metrics.growthRate > 0 ? 'up' : metrics.growthRate < 0 ? 'down' : 'neutral'
         },
         config: { color: '#10B981' }
+      },
+      {
+        id: `total-revenue-sum-${selectedUser.id}`,
+        type: 'metric',
+        title: 'Total Revenue Sum',
+        position: { x: 940, y: 440 },
+        size: { width: 280, height: 150 },
+        data: {
+          value: `$${metrics.totalRevenue.toLocaleString()}`,
+          change: `${recentOrders.length} recent orders`,
+          trend: metrics.totalRevenue > 50000 ? 'up' : metrics.totalRevenue > 25000 ? 'neutral' : 'down'
+        },
+        config: { color: '#8B5CF6' }
       },
       {
         id: `total-orders-${selectedUser.id}`,
