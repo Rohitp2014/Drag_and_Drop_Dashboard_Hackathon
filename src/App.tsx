@@ -135,7 +135,7 @@ function App() {
                 order.id,
                 order.customer,
                 order.product,
-                `$${order.totalAmount.toLocaleString()}`,
+                `$${(order.totalAmount ?? 0).toLocaleString()}`,
                 order.status.charAt(0).toUpperCase() + order.status.slice(1)
               ])
             }
@@ -147,7 +147,7 @@ function App() {
               headers: ['Product', 'Revenue', 'Orders'],
               rows: topProducts.map(product => [
                 product.product,
-                `$${product.revenue.toLocaleString()}`,
+                `$${(product.revenue ?? 0).toLocaleString()}`,
                 product.orders.toString()
               ])
             }
@@ -256,7 +256,7 @@ function App() {
             order.id,
             order.customer,
             order.product,
-            `$${order.totalAmount.toLocaleString()}`,
+            `$${(order.totalAmount ?? 0).toLocaleString()}`,
             order.status.charAt(0).toUpperCase() + order.status.slice(1)
           ])
         },
@@ -272,7 +272,7 @@ function App() {
           headers: ['Product', 'Revenue', 'Orders'],
           rows: topProducts.map(product => [
             product.product,
-            `$${product.revenue.toLocaleString()}`,
+            `$${(product.revenue ?? 0).toLocaleString()}`,
             product.orders.toString()
           ])
         },
