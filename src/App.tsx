@@ -9,6 +9,7 @@ import { ConfigPanel } from './components/ConfigPanel';
 import { DatasetViewer } from './components/DatasetViewer';
 import { UserSelector } from './components/UserSelector';
 import { DataManager } from './components/DataManager';
+import { LoginForm } from './components/LoginForm';
 import { Widget, DashboardLayout } from './types';
 import { generateId } from './utils/helpers';
 import { validateDashboardData, debounce } from './utils/helpers';
@@ -23,6 +24,9 @@ function App() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [authenticatedUser, setAuthenticatedUser] = useState<User | null>(null);
+  const [pendingUser, setPendingUser] = useState<User | null>(null);
 
   // Load saved dashboard from localStorage
   // Load saved dashboard from localStorage
@@ -77,6 +81,34 @@ function App() {
       debouncedSave(widgets, dashboardTitle);
     }
   }, [widgets, dashboardTitle]);
+
+  const handleUserSelect = (user: User) => {
+    setPendingUser(user);
+    setShowLoginForm(true);
+  };
+
+  const handleLogin = (success: boolean) => {
+    if (success && pendingUser) {
+      setAuthenticatedUser(pendingUser);
+      setSelectedUser(pendingUser);
+      setShowLoginForm(false);
+      setPendingUser(null);
+    } else {
+      // Login failed, stay on login form
+    }
+  };
+
+  const handleLoginCancel = () => {
+    setShowLoginForm(false);
+    setPendingUser(null);
+  };
+
+  const handleLogout = () => {
+    setAuthenticatedUser(null);
+    setSelectedUser(null);
+    setWidgets([]);
+    setDashboardTitle('Sales Dashboard');
+  };
 
   const updateWidgetsWithSalesData = async () => {
     if (!selectedUser) return;
@@ -416,8 +448,9 @@ function App() {
         
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <UserSelector
-            selectedUser={selectedUser}
-            onUserSelect={setSelectedUser}
+            selectedUser={authenticatedUser}
+            onUserSelect={handleUserSelect}
+            onLogout={authenticatedUser ? handleLogout : undefined}
           />
         </div>
         
@@ -427,7 +460,7 @@ function App() {
           onClearDashboard={clearDashboard}
           onLoadDemo={() => {}} // Disabled when user is selected
           onViewDataset={() => setIsDatasetViewerOpen(true)}
-          selectedUser={selectedUser}
+          selectedUser={authenticatedUser}
           onManageData={() => setIsDataManagerOpen(true)}
         />
         
@@ -454,16 +487,24 @@ function App() {
         
         {isDatasetViewerOpen && (
           <DatasetViewer 
-            selectedUser={selectedUser}
+            selectedUser={authenticatedUser}
             onClose={() => setIsDatasetViewerOpen(false)} 
           />
         )}
         
-        {isDataManagerOpen && selectedUser && (
+        {isDataManagerOpen && authenticatedUser && (
           <DataManager
-            user={selectedUser}
+            user={authenticatedUser}
             onClose={() => setIsDataManagerOpen(false)}
             onDataUpdate={handleDataUpdate}
+          />
+        )}
+        
+        {showLoginForm && pendingUser && (
+          <LoginForm
+            selectedUser={pendingUser}
+            onLogin={handleLogin}
+            onCancel={handleLoginCancel}
           />
         )}
       </div>

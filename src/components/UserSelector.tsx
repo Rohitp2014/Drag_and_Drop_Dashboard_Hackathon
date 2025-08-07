@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { User, ChevronDown, Users } from 'lucide-react';
+import { User, ChevronDown, Users, LogOut } from 'lucide-react';
 import { User as UserType, databaseManager } from '../lib/supabase';
 
 interface UserSelectorProps {
   selectedUser: UserType | null;
   onUserSelect: (user: UserType) => void;
+  onLogout?: () => void;
 }
 
 export const UserSelector: React.FC<UserSelectorProps> = ({
   selectedUser,
-  onUserSelect
+  onUserSelect,
+  onLogout
 }) => {
   const [users, setUsers] = useState<UserType[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -24,9 +26,6 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
       setLoading(true);
       const userData = await databaseManager.getUsers();
       setUsers(userData);
-      if (userData.length > 0 && !selectedUser) {
-        onUserSelect(userData[0]);
-      }
     } catch (error) {
       console.error('Error loading users:', error);
     } finally {
@@ -56,7 +55,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-3 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors min-w-64"
+        className="flex items-center space-x-3 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors min-w-80"
       >
         <div className="flex items-center space-x-2 flex-1">
           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -65,13 +64,32 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
           {selectedUser ? (
             <div className="flex-1 text-left">
               <div className="font-medium text-gray-900">{selectedUser.name}</div>
-              <div className="text-xs text-gray-500">{selectedUser.department} • {selectedUser.region}</div>
+              <div className="flex items-center space-x-2">
+                <div className="text-xs text-gray-500">{selectedUser.department} • {selectedUser.region}</div>
+                <div className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                  Authenticated
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="text-gray-500">Select a user</div>
+            <div className="text-gray-500">Select a user to login</div>
           )}
         </div>
-        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <div className="flex items-center space-x-2">
+          {selectedUser && onLogout && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onLogout();
+              }}
+              className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
+          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </div>
       </button>
 
       {isOpen && (
@@ -79,7 +97,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
           <div className="p-2">
             <div className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-500 border-b border-gray-100">
               <Users className="w-4 h-4" />
-              <span>{users.length} Users Available</span>
+              <span>{users.length} Users Available for Login</span>
             </div>
             {users.map((user) => (
               <button
