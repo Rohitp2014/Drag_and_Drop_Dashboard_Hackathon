@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Filter, Download, Eye, BarChart3 } from 'lucide-react';
+import { X, Search, Filter, Download, Eye, BarChart3, User, ChevronDown } from 'lucide-react';
 import { SalesRecord, User, databaseManager } from '../lib/supabase';
 
 interface DatasetViewerProps {
@@ -8,6 +8,8 @@ interface DatasetViewerProps {
 }
 
 export const DatasetViewer: React.FC<DatasetViewerProps> = ({ selectedUser, onClose }) => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [internalSelectedUser, setInternalSelectedUser] = useState<User | null>(selectedUser || null);
   const [data, setData] = useState<SalesRecord[]>([]);
   const [filteredData, setFilteredData] = useState<SalesRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,21 +19,36 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ selectedUser, onCl
   const [itemsPerPage] = useState(20);
   const [sortField, setSortField] = useState<keyof SalesRecord>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, [selectedUser]);
+  }, [internalSelectedUser]);
+
+  const loadUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const userData = await databaseManager.getUsers();
+      setUsers(userData);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   const loadData = async () => {
     try {
       let salesData: SalesRecord[];
-      if (selectedUser) {
-        salesData = await databaseManager.getSalesData(selectedUser.id);
+      if (internalSelectedUser) {
+        salesData = await databaseManager.getSalesData(internalSelectedUser.id);
       } else {
-        // Load all users' data for general view
-        const users = await databaseManager.getUsers();
-        const allData = await Promise.all(users.map(user => databaseManager.getSalesData(user.id)));
-        salesData = allData.flat();
+        salesData = [];
       }
       setData(salesData);
       setFilteredData(salesData);
@@ -138,6 +155,9 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ selectedUser, onCl
   const uniqueRegions = [...new Set(data.map(record => record.region))];
 
   const calculateMetrics = () => {
+    if (data.length === 0) {
+      return { totalRevenue: 0, averageOrderValue: 0, completionRate: 0 };
+    }
     const completedOrders = data.filter(record => record.status === 'completed');
     const totalRevenue = completedOrders.reduce((sum, record) => sum + record.total_amount, 0);
     const averageOrderValue = totalRevenue / (completedOrders.length || 1);
@@ -147,6 +167,15 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ selectedUser, onCl
 
   const metrics = calculateMetrics();
 
+  const getDepartmentColor = (department: string) => {
+    const colors = {
+      'Sales': 'bg-blue-100 text-blue-800',
+      'Marketing': 'bg-green-100 text-green-800',
+      'Operations': 'bg-purple-100 text-purple-800'
+    };
+    return colors[department as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl h-full max-h-[90vh] flex flex-col">
@@ -155,7 +184,7 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ selectedUser, onCl
           <div className="flex items-center space-x-3">
             <Eye className="w-6 h-6 text-blue-600" />
             <h2 className="text-2xl font-bold text-gray-800">
-              {selectedUser ? `${selectedUser.name}'s Sales Data` : 'All Sales Data'}
+              {internalSelectedUser ? `${internalSelectedUser.name}'s Sales Data` : 'Sales Data Viewer'}
             </h2>
           </div>
           <button
@@ -166,6 +195,96 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ selectedUser, onCl
           </button>
         </div>
 
+        {/* User Selection - Only show if no user was pre-selected */}
+        {!selectedUser && (
+          <div className="p-6 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center space-x-4">
+              <label className="text-sm font-medium text-gray-700">Select User:</label>
+              <div className="relative">
+                {loadingUsers ? (
+                  <div className="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm text-gray-600">Loading users...</span>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                      className="flex items-center space-x-3 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors min-w-64"
+                    >
+                      <div className="flex items-center space-x-2 flex-1">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <User className="w-4 h-4 text-blue-600" />
+                        </div>
+                        {internalSelectedUser ? (
+                          <div className="flex-1 text-left">
+                            <div className="font-medium text-gray-900">{internalSelectedUser.name}</div>
+                            <div className="text-xs text-gray-500">{internalSelectedUser.department} • {internalSelectedUser.region}</div>
+                          </div>
+                        ) : (
+                          <div className="text-gray-500">Select a user to view data</div>
+                        )}
+                      </div>
+                      <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isUserDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 max-h-80 overflow-y-auto">
+                        <div className="p-2">
+                          {users.map((user) => (
+                            <button
+                              key={user.id}
+                              onClick={() => {
+                                setInternalSelectedUser(user);
+                                setIsUserDropdownOpen(false);
+                              }}
+                              className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors ${
+                                internalSelectedUser?.id === user.id ? 'bg-blue-50 border border-blue-200' : ''
+                              }`}
+                            >
+                              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                                {user.name.split(' ').map(n => n[0]).join('')}
+                              </div>
+                              <div className="flex-1 text-left">
+                                <div className="font-medium text-gray-900">{user.name}</div>
+                                <div className="text-sm text-gray-500">{user.email}</div>
+                                <div className="flex items-center space-x-2 mt-1">
+                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getDepartmentColor(user.department)}`}>
+                                    {user.department}
+                                  </span>
+                                  <span className="text-xs text-gray-400">{user.region}</span>
+                                </div>
+                              </div>
+                              {internalSelectedUser?.id === user.id && (
+                                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Show content only if user is selected */}
+        {!internalSelectedUser ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <User className="w-12 h-12 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Select a User</h3>
+              <p className="text-gray-500 max-w-md">
+                Choose a user from the dropdown above to view their sales data and analytics.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Quick Stats */}
         <div className="p-6 border-b border-gray-200 bg-gray-50">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -349,6 +468,8 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ selectedUser, onCl
               </button>
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
     </div>
