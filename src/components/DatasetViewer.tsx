@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Filter, Download, Eye, BarChart3, User, ChevronDown } from 'lucide-react';
+import { X, Search, Filter, Download, Eye, BarChart3, User as UserIcon, ChevronDown } from 'lucide-react';
 import { SalesRecord, User, databaseManager } from '../lib/supabase';
 
 interface DatasetViewerProps {
@@ -214,7 +214,7 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ selectedUser, onCl
                     >
                       <div className="flex items-center space-x-2 flex-1">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="w-4 h-4 text-blue-600" />
+                          <UserIcon className="w-4 h-4 text-blue-600" />
                         </div>
                         {internalSelectedUser ? (
                           <div className="flex-1 text-left">
@@ -275,7 +275,7 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ selectedUser, onCl
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                <User className="w-12 h-12 text-gray-400" />
+                <UserIcon className="w-12 h-12 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Select a User</h3>
               <p className="text-gray-500 max-w-md">
