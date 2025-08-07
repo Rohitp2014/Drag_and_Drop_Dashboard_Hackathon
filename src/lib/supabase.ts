@@ -225,6 +225,67 @@ class DatabaseManager {
     if (error) throw error;
     return data || [];
   }
+
+  // Mock data methods for when Supabase is not configured
+  private getMockUsers(): User[] {
+    return [
+      {
+        id: '1',
+        name: 'John Smith',
+        email: 'john.smith@company.com',
+        department: 'Sales',
+        region: 'North America',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '2',
+        name: 'Sarah Johnson',
+        email: 'sarah.johnson@company.com',
+        department: 'Sales',
+        region: 'Europe',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: '3',
+        name: 'Mike Davis',
+        email: 'mike.davis@company.com',
+        department: 'Marketing',
+        region: 'North America',
+        created_at: new Date().toISOString()
+      }
+    ];
+  }
+
+  private getMockSalesData(userId: string): SalesRecord[] {
+    const mockData: SalesRecord[] = [];
+    const customers = ['Acme Corp', 'TechStart Inc', 'Global Solutions'];
+    const products = ['Pro Software License', 'Enterprise Suite', 'Mobile App'];
+    const categories = ['Software', 'Services', 'Hardware'];
+    const regions = ['North America', 'Europe', 'Asia Pacific'];
+    
+    for (let i = 0; i < 10; i++) {
+      const quantity = Math.floor(Math.random() * 5) + 1;
+      const unitPrice = Math.floor(Math.random() * 300) + 100;
+      
+      mockData.push({
+        id: `mock-${userId}-${i}`,
+        user_id: userId,
+        date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        customer: customers[Math.floor(Math.random() * customers.length)],
+        product: products[Math.floor(Math.random() * products.length)],
+        category: categories[Math.floor(Math.random() * categories.length)],
+        quantity,
+        unit_price: unitPrice,
+        total_amount: quantity * unitPrice,
+        region: regions[Math.floor(Math.random() * regions.length)],
+        status: Math.random() > 0.2 ? 'completed' : 'pending',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    }
+    
+    return mockData;
+  }
 }
 
 export const databaseManager = new DatabaseManager();
