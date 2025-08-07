@@ -77,7 +77,11 @@ export const DataManager: React.FC<DataManagerProps> = ({
         total_amount: newRecord.quantity * newRecord.unit_price
       };
 
-      await databaseManager.addSalesRecord(recordToAdd);
+      const addedRecord = await databaseManager.addSalesRecord(recordToAdd);
+      
+      // Update local state immediately for better UX
+      setSalesData(prev => [addedRecord, ...prev]);
+      
       await loadSalesData();
       onDataUpdate();
       setIsAddingNew(false);
@@ -105,7 +109,13 @@ export const DataManager: React.FC<DataManagerProps> = ({
         total_amount: editingRecord.quantity * editingRecord.unit_price
       };
 
-      await databaseManager.updateSalesRecord(editingRecord.id, updates);
+      const updatedRecord = await databaseManager.updateSalesRecord(editingRecord.id, updates);
+      
+      // Update local state immediately for better UX
+      setSalesData(prev => prev.map(record => 
+        record.id === editingRecord.id ? updatedRecord : record
+      ));
+      
       await loadSalesData();
       onDataUpdate();
       setEditingRecord(null);
@@ -118,6 +128,9 @@ export const DataManager: React.FC<DataManagerProps> = ({
     if (!confirm('Are you sure you want to delete this record?')) return;
 
     try {
+      // Update local state immediately for better UX
+      setSalesData(prev => prev.filter(record => record.id !== id));
+      
       await databaseManager.deleteSalesRecord(id);
       await loadSalesData();
       onDataUpdate();

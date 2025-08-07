@@ -91,7 +91,14 @@ class DatabaseManager {
   // Add new sales record
   async addSalesRecord(record: Omit<SalesRecord, 'id' | 'created_at' | 'updated_at'>): Promise<SalesRecord> {
     if (!supabase) {
-      throw new Error('Database not configured. Cannot add records in mock mode.');
+      // In mock mode, simulate adding a record
+      const newRecord: SalesRecord = {
+        id: `mock-${record.user_id}-${Date.now()}`,
+        ...record,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      return newRecord;
     }
 
     const { data, error } = await supabase
@@ -107,7 +114,23 @@ class DatabaseManager {
   // Update sales record
   async updateSalesRecord(id: string, updates: Partial<SalesRecord>): Promise<SalesRecord> {
     if (!supabase) {
-      throw new Error('Database not configured. Cannot update records in mock mode.');
+      // In mock mode, simulate updating a record
+      const updatedRecord: SalesRecord = {
+        id,
+        user_id: updates.user_id || '',
+        date: updates.date || new Date().toISOString().split('T')[0],
+        customer: updates.customer || '',
+        product: updates.product || '',
+        category: updates.category || '',
+        quantity: updates.quantity || 1,
+        unit_price: updates.unit_price || 0,
+        total_amount: updates.total_amount || 0,
+        region: updates.region || '',
+        status: updates.status || 'completed',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      return updatedRecord;
     }
 
     const { data, error } = await supabase
@@ -124,7 +147,8 @@ class DatabaseManager {
   // Delete sales record
   async deleteSalesRecord(id: string): Promise<void> {
     if (!supabase) {
-      throw new Error('Database not configured. Cannot delete records in mock mode.');
+      // In mock mode, simulate deletion (no-op)
+      return;
     }
 
     const { error } = await supabase

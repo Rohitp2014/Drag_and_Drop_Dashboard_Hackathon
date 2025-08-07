@@ -51,9 +51,9 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ selectedUser, onCl
         salesData = [];
       }
       setData(salesData);
-      setFilteredData(salesData);
     } catch (error) {
       console.error('Error loading data:', error);
+      setData([]);
     }
   };
 
@@ -280,6 +280,18 @@ export const DatasetViewer: React.FC<DatasetViewerProps> = ({ selectedUser, onCl
               <h3 className="text-lg font-medium text-gray-900 mb-2">Select a User</h3>
               <p className="text-gray-500 max-w-md">
                 Choose a user from the dropdown above to view their sales data and analytics.
+              </p>
+            </div>
+          </div>
+        ) : data.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <BarChart3 className="w-12 h-12 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Data Available</h3>
+              <p className="text-gray-500 max-w-md">
+                No sales data found for {internalSelectedUser.name}. Data may still be loading or this user has no sales records.
               </p>
             </div>
           </div>
