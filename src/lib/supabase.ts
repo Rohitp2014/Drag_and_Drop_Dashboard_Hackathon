@@ -3,11 +3,17 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
+// Check if Supabase is configured
+const isSupabaseConfigured = supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('https://');
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Only create Supabase client if properly configured
+export const supabase = isSupabaseConfigured 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+if (!isSupabaseConfigured) {
+  console.warn('Supabase not configured. Running in mock data mode. To use database features, add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env file.');
+}
 
 export interface User {
   id: string;
@@ -47,29 +53,47 @@ export interface SalesMetrics {
 class DatabaseManager {
   // Get all users
   async getUsers(): Promise<User[]> {
+    if (!supabase) {
+      return this.getMockUsers();
+    }
+
     const { data, error } = await supabase
       .from('users')
       .select('*')
       .order('name');
     
-    if (error) throw error;
+    if (error) {
+      console.warn('Database error, falling back to mock data:', error);
+      return this.getMockUsers();
+    }
     return data || [];
   }
 
   // Get sales data for a specific user
   async getSalesData(userId: string): Promise<SalesRecord[]> {
+    if (!supabase) {
+      return this.getMockSalesData(userId);
+    }
+
     const { data, error } = await supabase
       .from('sales_records')
       .select('*')
       .eq('user_id', userId)
       .order('date', { ascending: false });
     
-    if (error) throw error;
+    if (error) {
+      console.warn('Database error, falling back to mock data:', error);
+      return this.getMockSalesData(userId);
+    }
     return data || [];
   }
 
   // Add new sales record
   async addSalesRecord(record: Omit<SalesRecord, 'id' | 'created_at' | 'updated_at'>): Promise<SalesRecord> {
+    if (!supabase) {
+      throw new Error('Database not configured. Cannot add records in mock mode.');
+    }
+
     const { data, error } = await supabase
       .from('sales_records')
       .insert([record])
@@ -82,6 +106,10 @@ class DatabaseManager {
 
   // Update sales record
   async updateSalesRecord(id: string, updates: Partial<SalesRecord>): Promise<SalesRecord> {
+    if (!supabase) {
+      throw new Error('Database not configured. Cannot update records in mock mode.');
+    }
+
     const { data, error } = await supabase
       .from('sales_records')
       .update({ ...updates, updated_at: new Date().toISOString() })
@@ -95,6 +123,10 @@ class DatabaseManager {
 
   // Delete sales record
   async deleteSalesRecord(id: string): Promise<void> {
+    if (!supabase) {
+      throw new Error('Database not configured. Cannot delete records in mock mode.');
+    }
+
     const { error } = await supabase
       .from('sales_records')
       .delete()
